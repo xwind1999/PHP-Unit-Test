@@ -5,7 +5,9 @@ namespace App\Tests\AppBundle\Factory;
 
 
 use App\Tests\AppBundle\Entity\Dinosaur;
+use App\Tests\AppBundle\Service\DinosaurLengthDeterminator;
 use Exception;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class DinosaurFactoryTest extends TestCase
@@ -15,12 +17,15 @@ class DinosaurFactoryTest extends TestCase
      */
     private $factory;
 
+    /** @var MockObject */
+    private $lengthDeterminator;
     /**
-     *
+     * Create Mock Object will create clone class extends original class but override methods and all return null
      */
     public function setUp(): void
     {
-        $this->factory = new DinosaurFactory();
+        $this->lengthDeterminator = $this->createMock(DinosaurLengthDeterminator::class);
+        $this->factory = new DinosaurFactory($this->lengthDeterminator);
     }
 
     public function testItGrowsALargeVelociraptor()
@@ -51,41 +56,28 @@ class DinosaurFactoryTest extends TestCase
     /**
      * @dataProvider getSpecificationTests
      * @param string $spec
-     * @param bool $expectedIsLarge
      * @param bool $expectedIsCarnivorous
      * @throws Exception
      */
-    public function testItGrowsADinosaurFromSpecification(string $spec, bool $expectedIsLarge, bool $expectedIsCarnivorous)
+    public function testItGrowsADinosaurFromSpecification(string $spec, bool $expectedIsCarnivorous)
     {
+        $this->lengthDeterminator->expects($this->once())
+            ->method('getLengthFromSpecification')
+            ->with($spec)
+            ->willReturn(20);
+
         $dinosaur = $this->factory->growFromSpecification($spec);
 
-        if ($expectedIsLarge) {
-            $this->assertGreaterThanOrEqual(Dinosaur::LARGE, $dinosaur->getLength());
-        } else {
-            $this->assertLessThan(Dinosaur::LARGE, $dinosaur->getLength());
-        }
-
         $this->assertSame($expectedIsCarnivorous, $dinosaur->getIsCarnivorous(), 'Diets do not match');
-    }
-
-    /**
-     * @dataProvider getHugeDinosaurSpecTests
-     * @param string $specification
-     * @throws Exception
-     */
-    public function testItGrowsAHugeDinosaur(string $specification)
-    {
-        $dinosaur = $this->factory->growFromSpecification($specification);
-
-        $this->assertGreaterThanOrEqual(Dinosaur::HUGE, $dinosaur->getLength());
+        $this->assertSame(20, $dinosaur->getLength());
     }
 
     public function getSpecificationTests(): array
     {
         return [
-            ['large carnivorous dinosaur', true, true],
-            ['give me all the cookies!!!', false, false],
-            ['large herbivore', true, false],
+            ['large carnivorous dinosaur', true],
+            'default response' => ['give me all the cookies!!!', false],
+            ['large herbivore', false],
         ];
     }
 

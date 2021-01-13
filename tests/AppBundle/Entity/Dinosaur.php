@@ -19,6 +19,8 @@ class Dinosaur
      */
     private $enclosure;
 
+    private $securities;
+
     public function __construct(string $genus = 'Unknown', bool $isCarnivorous = false)
     {
         $this->genus = $genus;
