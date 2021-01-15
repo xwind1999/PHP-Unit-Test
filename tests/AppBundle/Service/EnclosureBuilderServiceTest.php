@@ -27,7 +27,7 @@ class EnclosureBuilderServiceTest extends TestCase
 
         $em->expects($this->atLeastOnce())
             ->method('flush');
-
++
         $dinoFactory->expects($this->exactly(2))
             ->method('growFromSpecification')
             ->willReturn(new Dinosaur())
